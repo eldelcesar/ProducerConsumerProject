@@ -12,8 +12,12 @@ public class OperationConsumer extends Thread {
     private DefaultListModel<String> doneList;
     private int Id;
     private boolean isConsuming;
+    private JTextArea doneOps;
 
-    public OperationConsumer(QueueBuffer buffer, int timeToWait, DefaultListModel<String> list, int id) {
+    public OperationConsumer(QueueBuffer buffer,
+                             int timeToWait,
+                             DefaultListModel<String> list,
+                             int id) {
         Buffer = buffer;
         TimeToWait = timeToWait;
         doneList = list;
@@ -23,22 +27,16 @@ public class OperationConsumer extends Thread {
 
     @Override
     public void run() {
-        
-        System.out.println("Running Consumer...");
         String product = "";
-        
+
+        // TODO NOTIFY UI FOR CHANGES, BUT DO NOT MODIFY IT IN THIS THREAD.
         while (isConsuming) {
             product = this.Buffer.consume();
             if(product.equals("")){
                 continue;
             }
-            
-            System.out.println("[C" + Id + "] " + "Consumer consumed: " + product);
-            String result = "[C" + Id + "] " + product + " = " + parser.evaluate(product);
-            System.out.println(result);
-
+            String result = product + " = " + parser.evaluate(product);
             doneList.addElement(result);
-            
             try {
                 Thread.sleep(TimeToWait);
             } catch (Exception e) {

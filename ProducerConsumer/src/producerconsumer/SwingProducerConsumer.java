@@ -29,8 +29,6 @@ public class SwingProducerConsumer {
     private JPanel panelInputs;
     private JPanel panelMainInputs;
 
-    private JTextArea textBufferStatus;
-
     private JList listDoing;
     private JList listToDo;
     private JList listDone;
@@ -42,8 +40,14 @@ public class SwingProducerConsumer {
     private JTextArea totalOpsText;
     private JTextArea totalTimeText;
 
+    private JTextArea textDoneOps;
+    private JTextArea textToDoOps;
+    private JTextArea rateOpsText;
+
     private long startTime;
     private long endTime;
+
+    private boolean isRunning;
 
     List<JTextField> textFields = new ArrayList<JTextField>() {{
         add(producerSize);
@@ -67,14 +71,33 @@ public class SwingProducerConsumer {
         int prodSize = Integer.parseInt(producerSize.getText());
         int buffSize = Integer.parseInt(bufferSize.getText());
 
-        QueueBuffer buffer = new QueueBuffer(buffSize, textBufferStatus, listModelDoing);
+        QueueBuffer buffer = new QueueBuffer(buffSize, listModelDoing);
+        OperationBuilder builder = new OperationBuilder(min, max);
 
         for (int i = 0; i < prodSize; i++) {
-            OperationBuilder builder = new OperationBuilder(min, max);
             OperationProducer producer = new OperationProducer(buffer, prodTime, builder, listModelToDo, i);
             producers.add(producer);
             producer.start();
         }
+
+        Runnable statusChecker = new Runnable() {
+            @Override
+            public void run() {
+                while (true){
+                    try{
+                        if(isRunning){
+                            textToDoOps.setText(Integer.toString(buffer.getProducedCount()));
+                            textDoneOps.setText(Integer.toString(buffer.getProcessedCount()));
+                        }
+                        Thread.sleep(1000);
+                    }catch (Exception ex){
+                        System.out.println("fuck");
+                    }
+                }
+            }
+        };
+        Thread thread = new Thread(statusChecker);
+        thread.start();
 
         for (int j = 0; j < consSize; j++) {
             OperationConsumer consumer = new OperationConsumer(buffer, consTime, listModelDone, j);
@@ -82,6 +105,8 @@ public class SwingProducerConsumer {
             consumer.start();
         }
     }
+
+    // TODO Handlers for changes in lists (To Do, Doing and Done)
 
 
     private FocusAdapter listener = new FocusAdapter(){
@@ -169,7 +194,6 @@ public class SwingProducerConsumer {
         startButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                System.out.println("START CLICKED!!!");
                 stopButton.setEnabled(true);
                 startButton.setEnabled(false);
                 setEnableTextFields(false);
@@ -179,13 +203,14 @@ public class SwingProducerConsumer {
                 totalOpsText.setText("");
                 totalTimeText.setText("");
                 startTime = System.currentTimeMillis();
+                isRunning = true;
                 runner();
             }
         });
         stopButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                System.out.println("STOP CLICKED!!!");
+                isRunning = false;
                 stopButton.setEnabled(false);
                 startButton.setEnabled(true);
                 setEnableTextFields(true);
@@ -201,9 +226,11 @@ public class SwingProducerConsumer {
 
                 int totalOps = listModelDone.getSize();
                 long totalTime = endTime - startTime;
+                float rateOps = (float) totalOps / (float) totalTime;
 
-                totalOpsText.setText(totalOps + " ops");
-                totalTimeText.setText(totalTime + " ms");
+                totalOpsText.setText( Integer.toString(totalOps) + " ops" );
+                totalTimeText.setText( Long.toString(totalTime) + " ms" );
+                rateOpsText.setText( Float.toString(rateOps) + " ops/ms" );
             }
         });
 

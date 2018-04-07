@@ -13,17 +13,20 @@ import javax.swing.*;
 
 public class QueueBuffer {
     Queue<String> Buffer;
-    int maxSize;
-    JTextArea bufferCurrent;
+    int maxSize, producedCount, processedCount;
     DefaultListModel bufferQueue;
 
-    public QueueBuffer(int capacity, JTextArea text, DefaultListModel list) {
+    public QueueBuffer(int capacity, DefaultListModel list) {
         Buffer = new LinkedList<>();
         maxSize = capacity;
-        bufferCurrent = text;
         bufferQueue = list;
     }
 
+    public int getProcessedCount(){ return  processedCount; }
+
+    public int getProducedCount(){ return producedCount; }
+
+    // TODO NOTIFY UI FOR CHANGES, BUT DO NOT MODIFY IT IN THIS THREAD.
     synchronized String consume(){
         String product = "";
         if(product.equals("")){
@@ -35,21 +38,22 @@ public class QueueBuffer {
         }
 
         product = this.Buffer.poll();
-        bufferQueue.removeElement(product);
         if(product == null){
             notify();
-            bufferCurrent.setText("Empty");
             return "";
         }
 
         notify();
-        bufferCurrent.setText(product + "...");
+        processedCount++;
         return product;
     }
 
+
+    // TODO NOTIFY UI FOR CHANGES, BUT DO NOT MODIFY IT IN THIS THREAD.
     synchronized boolean produce(String operation){
         if(Buffer.size() < maxSize){
             this.Buffer.add(operation);
+            producedCount++;
             bufferQueue.addElement(operation);
             notify();
             return true;

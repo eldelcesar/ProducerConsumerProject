@@ -13,6 +13,9 @@ public class OperationBuilder {
         upperBound = max;
     }
 
+    /* The random generator is too slow, so it somehow sometimes recycle the operations
+     *  instead of generating them, particularly because of the huge demand in small gap of time. */
+
     public String generate() {
         StringBuilder stringBuilder = new StringBuilder();
 

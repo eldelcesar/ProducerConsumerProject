@@ -2,7 +2,6 @@ package producerconsumer;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,8 +13,13 @@ public class OperationProducer extends Thread {
     private DefaultListModel<String> todoList;
     private boolean isProducing;
     private int Id;
+    private JTextArea toDoOps;
 
-    public OperationProducer(QueueBuffer buffer, int timeToWait, OperationBuilder builder, DefaultListModel<String> list, int id) {
+    public OperationProducer(QueueBuffer buffer,
+                             int timeToWait,
+                             OperationBuilder builder,
+                             DefaultListModel<String> list,
+                             int id) {
         Buffer = buffer;
         TimeToWait = timeToWait;
         Builder = builder;
@@ -29,10 +33,10 @@ public class OperationProducer extends Thread {
     public void run() {
         String product;
 
+        // TODO NOTIFY UI FOR CHANGES, BUT DO NOT MODIFY IT IN THIS THREAD.
         while (isProducing) {
             product = Builder.generate();
             boolean isAdd = this.Buffer.produce(product);
-            System.out.println("[P" + Id + "] " + "Producer produced: " + product);
             todoList.addElement("[P" + Id + "] " + product);
             
             try {
